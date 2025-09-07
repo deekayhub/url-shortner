@@ -7,13 +7,24 @@ use App\Models\ShortLinks;
 
 class UrlShortnerController extends Controller
 {
-    public function shorten(Request $request)
-    {   
 
+    protected function validateUrl($url)
+    {
+        return filter_var($url, FILTER_VALIDATE_URL) !== false;
+    }
+    public function shorten(Request $request)
+    {           
+        $url = $request->input('url');
+        if(!$url || !$this->validateUrl($url)){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Please enter a valid URL.',
+            ], 400);
+        }
         $shortCode = substr(md5(uniqid()), 6, 8);
         $shorturl = url('u/' . $shortCode);
 
-        $duplicateUrl = ShortLinks::where('original_url', $request->input('url'))->first();
+        $duplicateUrl = ShortLinks::where('original_url', $url)->first();
         if($duplicateUrl){
             return response()->json([
                 'status' => 'success',
@@ -23,7 +34,7 @@ class UrlShortnerController extends Controller
         }
 
         $storeLink = ShortLinks::create([
-            'original_url' => $request->input('url'),
+            'original_url' => $url,
             'short_code' => $shortCode,
             'short_url' => $shorturl,
         ]);
