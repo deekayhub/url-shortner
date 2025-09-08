@@ -46,75 +46,79 @@
                     <div class="text-success" id="successMessage"></div>
                 </div>
 
-                <script>
-                    async function shortenUrl() {
-                        const urlInput = document.querySelector('input[name="url"]');
-                        const urlError = document.getElementById('urlError');
-                        const shortUrlContainer = document.getElementById('shortUrlContainer');
-                        const shortUrlInput = document.getElementById('shortUrl');
-                        const successMessage = document.getElementById('successMessage');
-
-                        urlError.style.display = 'none';
-                        successMessage.textContent = '';
-                        shortUrlContainer.style.display = 'none';
-
-                        const url = urlInput.value.trim();
-                        if (!url) {
-                            urlError.style.display = 'block';
-                            urlError.textContent = 'Please enter a valid URL.';
-                            urlInput.focus();
-                            return;
-                        }
-                        const shortenBtn = document.getElementById('shortenBtn');
-                        shortenBtn.disabled = true;
-                        shortenBtn.querySelector('.spinner-border').classList.remove('d-none');
-
-                        try{
-                            const response = await fetch("{{ route('shorten') }}", {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                                },
-                                body: JSON.stringify({ url: url })
-                            });
-
-                            const data = await response.json();
-                            shortenBtn.disabled = false;
-                            shortenBtn.querySelector('.spinner-border').classList.add('d-none');
-                            if (data.status === 'success') {
-                                shortUrlInput.value = data.short_url;
-                                shortUrlContainer.style.display = 'block';
-                                successMessage.textContent = data.message || 'URL shortened successfully!';
-                            } else {
-                                urlError.textContent = data.message || 'An error occurred. Please try again.';
-                                urlError.style.display = 'block';
-                            }
-
-                        }catch(error){
-                            console.error('Error:', error);
-                            urlError.style.display = 'block';
-                            urlError.textContent = 'An error occurred. Please try again.';
-                        }finally{
-                            shortenBtn.disabled = false;
-                            shortenBtn.querySelector('.spinner-border').classList.add('d-none');
-                        }
-                    }
-
-                function copyToClipboard() {
-                    const shortUrlInput = document.getElementById('shortUrl');
-                    const successMessage = document.getElementById('successMessage');
-                    shortUrlInput.select();
-                    shortUrlInput.setSelectionRange(0, 99999); // For mobile devices
-                    document.execCommand('copy');
-                    if(successMessage) {
-                        successMessage.textContent = 'Short URL copied to clipboard!';
-                    }
-                }
-
-                </script>
+                
 
             </div>
         </div>
     </div>
 @endsection
+@section('scripts')
+    <script>
+        async function shortenUrl() {
+            const urlInput = document.querySelector('input[name="url"]');
+            const urlError = document.getElementById('urlError');
+            const shortUrlContainer = document.getElementById('shortUrlContainer');
+            const shortUrlInput = document.getElementById('shortUrl');
+            const successMessage = document.getElementById('successMessage');
+
+            urlError.style.display = 'none';
+            successMessage.textContent = '';
+            shortUrlContainer.style.display = 'none';
+
+            const url = urlInput.value.trim();
+            if (!url) {
+                urlError.style.display = 'block';
+                urlError.textContent = 'Please enter a valid URL.';
+                urlInput.focus();
+                return;
+            }
+            const shortenBtn = document.getElementById('shortenBtn');
+            shortenBtn.disabled = true;
+            shortenBtn.querySelector('.spinner-border').classList.remove('d-none');
+
+            try{
+                const response = await fetch("{{ route('shorten') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+                shortenBtn.disabled = false;
+                shortenBtn.querySelector('.spinner-border').classList.add('d-none');
+                if (data.status === 'success') {
+                    shortUrlInput.value = data.short_url;
+                    shortUrlContainer.style.display = 'block';
+                    successMessage.textContent = data.message || 'URL shortened successfully!';
+                } else {
+                    urlError.textContent = data.message || 'An error occurred. Please try again.';
+                    urlError.style.display = 'block';
+                }
+
+            }catch(error){
+                console.error('Error:', error);
+                urlError.style.display = 'block';
+                urlError.textContent = 'An error occurred. Please try again.';
+            }finally{
+                shortenBtn.disabled = false;
+                shortenBtn.querySelector('.spinner-border').classList.add('d-none');
+            }
+        }
+
+        function copyToClipboard() {
+            const shortUrlInput = document.getElementById('shortUrl');
+            const successMessage = document.getElementById('successMessage');
+            shortUrlInput.select();
+            shortUrlInput.setSelectionRange(0, 99999); // For mobile devices
+            document.execCommand('copy');
+            if(successMessage) {
+                successMessage.textContent = 'Short URL copied to clipboard!';
+            }
+        }
+
+    </script>
+@endsection
+

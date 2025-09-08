@@ -13,7 +13,7 @@ class UrlShortnerController extends Controller
         return filter_var($url, FILTER_VALIDATE_URL) !== false;
     }
     public function shorten(Request $request)
-    {           
+    {
         $url = $request->input('url');
         if(!$url || !$this->validateUrl($url)){
             return response()->json([
@@ -24,7 +24,7 @@ class UrlShortnerController extends Controller
         $shortCode = substr(md5(uniqid()), 6, 8);
         $shorturl = url('u/' . $shortCode);
 
-        $duplicateUrl = ShortLinks::where('original_url', $url)->first();
+        $duplicateUrl = ShortLinks::where('original_url', $url)->where('expires_at', '>', now())->first();
         if($duplicateUrl){
             return response()->json([
                 'status' => 'success',
@@ -37,6 +37,7 @@ class UrlShortnerController extends Controller
             'original_url' => $url,
             'short_code' => $shortCode,
             'short_url' => $shorturl,
+            'expires_at' => now()->addMinutes(15),
         ]);
         if($storeLink){
             return response()->json([
@@ -58,6 +59,9 @@ class UrlShortnerController extends Controller
         }
         $originalLink = ShortLinks::where('short_code', $code)->first();
         if($originalLink){
+            if($originalLink->expires_at && $originalLink->expires_at->isPast()){
+                return redirect()->route('home')->with('error', 'This short URL has expired.');
+            }
             return redirect()->away($originalLink->original_url);
         } else {
             return redirect()->route('home')->with('error', 'Short URL not found.');
